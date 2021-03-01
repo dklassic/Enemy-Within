@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CatchCo;
+using Cinemachine;
 
 [ExecuteAlways]
 public class DeckArrangement : MonoBehaviour
@@ -13,13 +14,16 @@ public class DeckArrangement : MonoBehaviour
     [SerializeField] [Range(0f, 5f)] private float selectionModifier = 2f;
     [SerializeField] private bool autoArrange = true;
     [SerializeField] private float yRotation = -20f;
-    [Header("Physics")]
+    [SerializeField] private Transform table = null;
+    [Header("Throw")]
     [SerializeField] Transform throwTarget = null;
-    [SerializeField] Transform explosionTarget = null;
     [SerializeField] float throwStrength = 4f;
     [SerializeField] float aimFuzziness = 10f;
+    [Header("Explosion")]
+    [SerializeField] Transform explosionTarget = null;
     float explosionStrength = 500f;
     float explosionRange = 20f;
+    [SerializeField] CinemachineImpulseSource impulse = null;
 
     // Update is called once per frame
     void Update()
@@ -76,25 +80,29 @@ public class DeckArrangement : MonoBehaviour
             return;
         Transform card = transform.GetChild(currentCard);
         Rigidbody rb;
-        card.parent = null;
+        card.parent = table;
         Vector3 targetPosition = throwTarget.position + Vector3.up * Random.Range(-aimFuzziness, aimFuzziness) + Vector3.right * Random.Range(-aimFuzziness, aimFuzziness);
         if (card.TryGetComponent<Rigidbody>(out rb))
         {
-            rb.GetComponent<BoxCollider>().enabled = true;
-            rb.AddForce((targetPosition - card.transform.position).normalized * throwStrength, ForceMode.Impulse);
-        }
-        else
-        {
-            card.gameObject.AddComponent<Rigidbody>();
             card.GetChild(0).GetComponent<BoxCollider>().enabled = true;
-            rb = card.GetComponent<Rigidbody>();
-            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            rb.isKinematic = false;
             rb.AddForce((targetPosition - card.transform.position).normalized * throwStrength, ForceMode.Impulse);
         }
-        if(currentCard > transform.childCount -1)
+        if (currentCard > transform.childCount - 1)
         {
-            currentCard = transform.childCount -1;
+            currentCard = transform.childCount - 1;
         }
+    }
+    [ExposeMethodInEditor]
+    void GetBack()
+    {
+        if (table.childCount == 0)
+            return;
+        Transform child = table.GetChild(table.childCount - 1);
+        child.GetChild(0).GetComponent<BoxCollider>().enabled = false;
+        child.GetComponent<Rigidbody>().isKinematic = true;
+        child.parent = transform;
+        currentCard = transform.childCount - 1;
     }
 
     [ExposeMethodInEditor]
@@ -109,5 +117,16 @@ public class DeckArrangement : MonoBehaviour
             if (rb != null)
                 rb.AddExplosionForce(explosionStrength, explosionPos, explosionRange, 0.2f);
         }
+        if (impulse == null)
+            return;
+        impulse.GenerateImpulse();
+    }
+
+    public Transform CurrentFocus()
+    {
+        if (currentCard < 0 || currentCard > transform.childCount - 1)
+            return transform;
+        else
+            return transform.GetChild(currentCard);
     }
 }
