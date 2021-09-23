@@ -114,8 +114,9 @@ public class DeckArrangement : MonoBehaviour
         {
             Rigidbody rb = hit.transform.parent.GetComponent<Rigidbody>();
 
-            if (rb != null)
-                rb.AddExplosionForce(explosionStrength, explosionPos, explosionRange, 0.2f);
+            if (rb == null)
+                continue;
+            rb.AddExplosionForce(explosionStrength, explosionPos, explosionRange, 0.2f);
         }
         if (impulse == null)
             return;
