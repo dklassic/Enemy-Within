@@ -9,9 +9,9 @@ public class DeckArrangement : MonoBehaviour
 {
     [Header("Deck Layout")]
     [SerializeField] private int currentCard = -10;
-    [SerializeField] [Range(0f, 1f)] private float zOffset = 0f;
-    [SerializeField] [Range(0f, 1f)] private float xOffset = 0f;
-    [SerializeField] [Range(0f, 5f)] private float selectionModifier = 2f;
+    [SerializeField][Range(0f, 1f)] private float zOffset = 0f;
+    [SerializeField][Range(0f, 1f)] private float xOffset = 0f;
+    [SerializeField][Range(0f, 5f)] private float selectionModifier = 2f;
     [SerializeField] private bool autoArrange = true;
     [SerializeField] private float yRotation = -20f;
     [SerializeField] private Transform table = null;
@@ -112,11 +112,8 @@ public class DeckArrangement : MonoBehaviour
         Collider[] colliders = Physics.OverlapSphere(explosionPos, explosionRange);
         foreach (Collider hit in colliders)
         {
-            Rigidbody rb = hit.transform.parent.GetComponent<Rigidbody>();
-
-            if (rb == null)
-                continue;
-            rb.AddExplosionForce(explosionStrength, explosionPos, explosionRange, 0.2f);
+            if (hit.transform.parent.TryGetComponent<Rigidbody>(out Rigidbody rb))
+                rb.AddExplosionForce(explosionStrength, explosionPos, explosionRange, 0.2f);
         }
         if (impulse == null)
             return;
